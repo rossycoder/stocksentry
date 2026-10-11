@@ -1,92 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TerraDetective AI — Earth System Trend Detective</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockSentry — AI Replenishment Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#04060e; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
-  --line:rgba(255,255,255,.09); --txt:#eef2ff; --dim:#93a0bd; --faint:#5b6484;
-  --ind:#6366f1; --pnk:#f472b6; --cy:#7dd3fc; --grad:linear-gradient(135deg,#6366f1,#f472b6);
+  --bg:#0b0d12; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.09); --txt:#f5f3ee; --dim:#9aa0ae; --faint:#626878;
+  --amb:#f59e0b; --org:#f97316; --grad:linear-gradient(135deg,#f59e0b,#f97316);
+  --crit:#ff6b6b; --high:#ffa94d; --med:#ffd43b; --low:#69db7c; --ok:#69db7c;
   --r:18px;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:'Inter',system-ui,sans-serif;color:var(--txt);min-height:100vh;
   background:
-    radial-gradient(1100px 560px at 12% -5%, rgba(99,102,241,.16), transparent 60%),
-    radial-gradient(900px 520px at 92% 8%, rgba(244,114,182,.10), transparent 60%),
-    radial-gradient(700px 700px at 50% 110%, rgba(125,211,252,.06), transparent 60%),
+    radial-gradient(1000px 540px at 12% -5%, rgba(245,158,11,.12), transparent 60%),
+    radial-gradient(900px 520px at 95% 5%, rgba(249,115,22,.09), transparent 60%),
     var(--bg);}
 h1,h2,h3,.sg{font-family:'Space Grotesk',sans-serif}
-.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 48px}
+.wrap{max-width:1140px;margin:0 auto;padding:24px 20px 48px}
 /* header */
 .top{display:flex;align-items:center;gap:16px;padding:20px 24px;border:1px solid var(--line);border-radius:22px;
   background:var(--panel);backdrop-filter:blur(14px);animation:rise .6s ease both}
 .logo{width:54px;height:54px;border-radius:17px;background:var(--grad);display:grid;place-items:center;flex:none;
-  box-shadow:0 8px 32px rgba(99,102,241,.4)}
+  box-shadow:0 8px 32px rgba(245,158,11,.35)}
 .logo svg{width:28px;height:28px}
-.top h1{margin:0;font-size:23px}.top h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.top h1{margin:0;font-size:24px}.top h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .top p{margin:5px 0 0;color:var(--dim);font-size:13px}
-.badge{margin-left:auto;flex:none;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
-  padding:8px 15px;border-radius:999px;background:rgba(99,102,241,.13);border:1px solid rgba(99,102,241,.4);color:#c7d2fe}
-/* dossier card */
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;margin-top:16px;
-  animation:rise .6s .08s ease both}
-.card h2{margin:0 0 14px;font-size:15px;letter-spacing:.5px;text-transform:uppercase;color:var(--dim)}
-.card h2 .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:9px;background:var(--grad);
-  color:#fff;font-size:13px;margin-right:9px;vertical-align:1px}
-.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.preset{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:9px 17px;
-  font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s}
-.preset:hover{border-color:var(--pnk);transform:translateY(-1px)}
-.preset.on{background:var(--grad);border-color:transparent;color:#fff}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:640px){.grid2{grid-template-columns:1fr}}
-.fld{position:relative}
-.fld label{position:absolute;top:-8px;left:12px;font-size:10px;font-weight:700;letter-spacing:.5px;background:#0a0f1e;
-  padding:0 6px;color:var(--faint);text-transform:uppercase}
-.fld input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;color:var(--txt);
-  padding:12px 14px;font-size:14px;font-family:inherit;outline:none;transition:.2s}
-.fld input:focus{border-color:var(--ind);box-shadow:0 0 0 3px rgba(99,102,241,.18)}
-.coords{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{background:var(--grad);border:none;color:#fff;font-weight:700;font-size:15px;padding:14px 34px;border-radius:14px;
-  cursor:pointer;font-family:'Space Grotesk';letter-spacing:.3px;transition:.2s;box-shadow:0 8px 28px rgba(99,102,241,.4);margin-top:14px}
+.badge{margin-left:auto;flex:none;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  padding:8px 15px;border-radius:999px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:#fcd34d}
+/* upload card */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px;margin-top:16px;animation:rise .6s .08s ease both}
+.card h3{margin:0 0 4px;font-size:16px}
+.card .sub2{color:var(--dim);font-size:13px;margin-bottom:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--grad);border:none;color:#1a1005;font-weight:800;font-size:14.5px;padding:13px 26px;border-radius:13px;
+  cursor:pointer;font-family:'Space Grotesk';transition:.2s;box-shadow:0 8px 26px rgba(245,158,11,.3)}
 .btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.55;cursor:wait;transform:none}
-/* results */
-#results{display:none;margin-top:16px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;animation:pop .4s ease both}
-.stat .v{font-family:'Space Grotesk';font-size:25px;font-weight:700}
-.stat .l{font-size:11.5px;color:var(--dim);margin-top:4px;letter-spacing:.3px}
-.stat.up .v{color:#f87171}.stat.dn .v{color:#34d399}.stat.neu .v{color:var(--cy)}
-canvas#chart{width:100%;height:230px;display:block}
-.legend{display:flex;gap:18px;margin-top:10px;font-size:12px;color:var(--dim);flex-wrap:wrap}
-.legend i{display:inline-block;width:22px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
-.dossier{background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:16px;padding:22px 24px;position:relative}
-.dossier::before{content:'CASE FILE';position:absolute;top:-11px;left:22px;font-size:10px;font-weight:800;letter-spacing:2px;
-  background:#101736;padding:3px 12px;border-radius:6px;color:var(--pnk);border:1px solid rgba(244,114,182,.4)}
-.dossier pre{white-space:pre-wrap;font-family:'Inter',sans-serif;font-size:14.5px;line-height:1.75;margin:6px 0 0;color:#dbe3f5}
-.prov{display:inline-block;margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-  padding:5px 12px;border-radius:999px;background:rgba(125,211,252,.1);border:1px solid rgba(125,211,252,.35);color:#bae6fd}
-/* download case-file button */
-.dl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.dlbtn{background:var(--grad);border:none;color:#fff;font-weight:700;font-size:13px;padding:9px 18px;border-radius:10px;
-  cursor:pointer;font-family:'Space Grotesk';letter-spacing:.3px;text-transform:none;white-space:nowrap;
-  box-shadow:0 4px 18px rgba(99,102,241,.4);transition:.2s}
-.dlbtn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(244,114,182,.45)}
-.meta{font-size:11.5px;color:var(--faint);margin-top:14px;line-height:1.7}
-/* loading */
-.loading{border-radius:22px;padding:64px 20px;text-align:center;color:var(--dim);border:1px dashed var(--line);margin-top:16px}
-.spinner{width:46px;height:46px;border:3px solid rgba(99,102,241,.2);border-top-color:var(--ind);border-radius:50%;margin:0 auto 16px;animation:sp .8s linear infinite}
-.steps{font-size:13px;margin-top:8px;color:var(--faint)}
+.btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--txt);box-shadow:none}
+.btn.ghost:hover{border-color:var(--amb)}
+.hint{color:var(--dim);font-size:12.5px;margin-top:10px}
+.hint code{background:rgba(0,0,0,.35);padding:2px 7px;border-radius:6px;font-size:12px}
+.dl{color:var(--dim);font-size:13px;text-decoration:underline dotted;cursor:pointer}
+.dl:hover{color:var(--txt)}
+.err{color:var(--crit);font-size:13.5px;margin-top:10px;display:none}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;position:relative;overflow:hidden;animation:pop .4s ease both}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--amb));opacity:.8}
+.kpi .v{font-family:'Space Grotesk';font-size:30px;font-weight:700}
+.kpi .l{font-size:12px;color:var(--dim);margin-top:5px}
+/* table */
+.tblwrap{overflow-x:auto;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:760px}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--dim);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px}
+tbody tr{transition:.15s}tbody tr:hover{background:rgba(255,255,255,.025)}
+.pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.4px}
+.CRITICAL{background:rgba(255,107,107,.14);color:var(--crit);border:1px solid rgba(255,107,107,.4)}
+.HIGH{background:rgba(255,169,77,.13);color:var(--high);border:1px solid rgba(255,169,77,.4)}
+.MEDIUM{background:rgba(255,212,59,.12);color:var(--med);border:1px solid rgba(255,212,59,.35)}
+.LOW,.OK{background:rgba(105,219,124,.1);color:var(--low);border:1px solid rgba(105,219,124,.3)}
+.daysbar{height:6px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-top:5px;min-width:90px}
+.daysbar>div{height:100%;border-radius:4px;transition:width .6s ease}
+code.sku{background:rgba(0,0,0,.4);padding:3px 8px;border-radius:7px;font-size:12px;border:1px solid var(--line)}
+.why{color:var(--dim);font-size:12.5px;max-width:320px;line-height:1.5}
+/* risk radar chart */
+.chartcard{position:relative;overflow:hidden}
+.chartcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad);opacity:.9}
+.chartwrap{position:relative;margin-top:8px}
+#riskChart{display:block;width:100%;cursor:crosshair}
+.chtip{position:absolute;pointer-events:none;background:#0f1420;border:1px solid rgba(245,158,11,.45);border-radius:10px;
+  padding:10px 12px;font-size:12.5px;line-height:1.6;display:none;z-index:5;max-width:260px;
+  box-shadow:0 10px 28px rgba(0,0,0,.55)}
+.chtip b{color:#fcd34d}.chtip .tk{color:var(--dim)}
+.chartempty{display:none;color:var(--dim);font-size:13.5px;text-align:center;padding:28px 0;
+  border:1px dashed var(--line);border-radius:12px;margin-top:8px}
+.legend{display:flex;gap:12px;font-size:11.5px;color:var(--dim);font-weight:600;letter-spacing:.3px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* narrative */
+#narrCard{display:none}
+#narrative{white-space:pre-wrap;line-height:1.7;font-size:14.5px;background:rgba(245,158,11,.05);
+  border:1px solid rgba(245,158,11,.22);border-radius:14px;padding:18px 20px}
+.provtag{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--amb)}
+/* Q&A */
+.qa{display:flex;gap:10px;margin-top:6px}
+.qa input{flex:1;background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--txt);border-radius:13px;
+  padding:13px 16px;font-size:14px;font-family:inherit;outline:none}
+.qa input:focus{border-color:var(--amb);box-shadow:0 0 0 3px rgba(245,158,11,.15)}
+#answer{margin-top:12px;padding:16px 18px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:14px;
+  line-height:1.65;font-size:14px;display:none}
+.cites{margin-top:8px;font-size:12px;color:var(--dim)}
+.cites code{background:rgba(0,0,0,.4);padding:2px 7px;border-radius:6px;margin-right:5px}
+/* misc */
+details{margin-top:14px}summary{cursor:pointer;color:var(--dim);font-size:13.5px}
+details p{color:var(--dim);font-size:13.5px;line-height:1.7}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;
-  border:1px solid #f87171;color:#fecaca;padding:12px 20px;border-radius:14px;font-size:13.5px;opacity:0;
+  border:1px solid var(--crit);color:#fecaca;padding:12px 20px;border-radius:14px;font-size:13.5px;opacity:0;
   pointer-events:none;transition:.3s;z-index:99;max-width:92vw}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.25);border-top-color:#1a1005;border-radius:50%;
+  display:inline-block;animation:sp .7s linear infinite;vertical-align:-3px;margin-right:8px}
+.spin.lt{border-color:rgba(255,255,255,.25);border-top-color:#fff}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -95,184 +114,252 @@ canvas#chart{width:100%;height:230px;display:block}
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2a15 15 0 019 4M12 2a15 15 0 00-9 4M12 22a15 15 0 009-4M12 22a15 15 0 01-9-4M2 12h3M19 12h3"/></svg></div>
-    <div><h1>TerraDetective <span>AI</span></h1>
-      <p>NASA Space Apps Challenge 2026 · “Be an Earth System Trend Detective” · 40 years of real NASA POWER (MERRA-2) satellite data, decoded.</p></div>
-    <div class="badge">🛰 live NASA data</div>
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#1a1005" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
+    <div><h1>Stock<span>Sentry</span></h1>
+      <p>AI replenishment desk for small retail shops — upload inventory, get your reorder battle-plan in seconds.</p></div>
+    <div class="badge" id="aiBadge">engine ready</div>
   </div>
 
   <div class="card">
-    <h2><span class="n">1</span>Open a case — pick a location</h2>
-    <div class="presets" id="presets"></div>
-    <div class="grid2">
-      <div class="fld"><label>Place name</label><input id="place" value="Karachi, Pakistan"></div>
-      <div class="coords">
-        <div class="fld"><label>Latitude</label><input id="lat" type="number" step="0.01" value="24.86"></div>
-        <div class="fld"><label>Longitude</label><input id="lon" type="number" step="0.01" value="67.01"></div>
-      </div>
+    <h3>Load inventory</h3>
+    <div class="sub2">One click for the demo shop, or bring your own CSV.</div>
+    <div class="row">
+      <button class="btn" id="demoBtn" onclick="loadDemo()">⚡ Analyze demo shop</button>
+      <button class="btn ghost" onclick="document.getElementById('csvFile').click()">Upload CSV</button>
+      <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="uploadCSV(this)">
+      <a class="dl" href="/api/sample.csv">download demo CSV</a>
     </div>
-    <button class="btn" id="go" onclick="investigate()">🔍 Investigate 40 years</button>
+    <div class="hint">Columns: <code>sku, product_name, on_hand, avg_daily_sales, lead_time_days</code> + optional <code>category, unit_cost</code> · max 5,000 rows</div>
+    <div class="err" id="err"></div>
   </div>
 
-  <div id="stage"></div>
+  <div id="results" style="display:none">
+    <div class="kpis">
+      <div class="kpi" style="--kc:#5aa2ff;animation-delay:.02s"><div class="v" id="kItems">–</div><div class="l">SKUs analyzed</div></div>
+      <div class="kpi" style="--kc:var(--crit);animation-delay:.08s"><div class="v" id="kCrit" style="color:var(--crit)">–</div><div class="l">Critical — order today</div></div>
+      <div class="kpi" style="--kc:var(--high);animation-delay:.14s"><div class="v" id="kHigh" style="color:var(--high)">–</div><div class="l">High risk</div></div>
+      <div class="kpi" style="--kc:var(--amb);animation-delay:.2s"><div class="v" id="kVal">–</div><div class="l">Inventory value at risk</div></div>
+    </div>
+
+    <div class="card chartcard">
+      <div class="row" style="justify-content:space-between;margin-bottom:4px">
+        <h3 style="margin:0">🔥 Risk Radar <span class="sub2" style="margin:0">top 10 at-risk SKUs</span></h3>
+        <div class="legend">
+          <span><i style="background:#ef4444"></i>CRITICAL</span>
+          <span><i style="background:#f97316"></i>HIGH</span>
+          <span><i style="background:#eab308"></i>MEDIUM</span>
+          <span><i style="background:#22c55e"></i>LOW/OK</span>
+        </div>
+      </div>
+      <div class="chartwrap" id="chartWrap">
+        <canvas id="riskChart"></canvas>
+        <div class="chtip" id="chartTip"></div>
+      </div>
+      <div class="chartempty" id="chartEmpty">No data — run an analysis first.</div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <h3 style="margin:0">Reorder priority <span class="provtag" id="dataBadge" style="margin-left:8px"></span></h3>
+        <button class="btn ghost" id="narrBtn" onclick="narrate()">✨ AI briefing</button>
+      </div>
+      <div class="tblwrap"><table><thead><tr>
+        <th>SKU</th><th>Product</th><th>On hand</th><th>Days of stock</th><th>Risk</th><th>Suggested order</th><th>Why</th>
+      </tr></thead><tbody id="tbl"></tbody></table></div>
+    </div>
+
+    <div class="card" id="narrCard">
+      <h3>AI briefing <span class="provtag" id="narrProv" style="margin-left:8px"></span></h3>
+      <div id="narrative"></div>
+    </div>
+
+    <div class="card">
+      <h3>Ask about your stock</h3>
+      <div class="qa">
+        <input id="q" placeholder='e.g. "Which SKUs are critical?" or "tell me about SKU SNK-201"' onkeydown="if(event.key==='Enter')ask()">
+        <button class="btn" id="askBtn" onclick="ask()">Ask</button>
+      </div>
+      <div id="answer"></div>
+      <div class="hint">Try: “what should I reorder first?” · “total inventory value?” · “which SKUs are healthy?”</div>
+    </div>
+
+    <details><summary>How the risk score is computed</summary>
+      <p>days_of_stock = on_hand ÷ avg_daily_sales · reorder_point = daily_sales × lead_time × 1.25 ·
+      risk from coverage ÷ lead time: &lt;0.5× → CRITICAL, &lt;1× → HIGH, &lt;2× → MEDIUM, &lt;4× → LOW, else OK.
+      Suggested order tops stock up to 30 days of cover. Zero-velocity items are flagged honestly, never scored.</p>
+    </details>
+  </div>
 </div>
 <div id="toast"></div>
 
 <script>
+let lastRows=null,isDemo=false;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),4200);}
-let lastCase=null; // last successful /api/investigate result — source of the downloadable case file
-
-const PRESETS=[
-  ['Karachi, Pakistan',24.86,67.01],['Thar Desert, Pakistan',25.2,69.5],
-  ['Atacama Desert, Chile',-23.86,-69.13],['New York, USA',40.71,-74.0],['London, UK',51.5,-0.12]];
-$('presets').innerHTML=PRESETS.map((p,i)=>`<button class="preset${i===0?' on':''}" onclick="pick(${i},this)">${p[0].split(',')[0]}</button>`).join('');
-function pick(i,el){const p=PRESETS[i];$('place').value=p[0];$('lat').value=p[1];$('lon').value=p[2];
-  document.querySelectorAll('.preset').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
-
-function drawChart(years,vals,anoms){
-  const cv=$('chart'),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=230;
-  cv.width=W*dpr;cv.height=H*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);
-  const min=Math.min(...vals),max=Math.max(...vals),pad=(max-min)*.18||1;
-  const X=i=>46+i*(W-60)/(vals.length-1),Y=v=>H-34-(v-(min-pad))*(H-64)/((max+pad)-(min-pad));
-  // area
-  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(99,102,241,.32)');g.addColorStop(1,'rgba(99,102,241,0)');
-  x.beginPath();vals.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));
-  x.lineTo(X(vals.length-1),H-24);x.lineTo(X(0),H-24);x.closePath();x.fillStyle=g;x.fill();
-  // series
-  x.beginPath();vals.forEach((v,i)=>i?x.lineTo(X(i),Y(v)):x.moveTo(X(i),Y(v)));
-  x.strokeStyle='#a5b4fc';x.lineWidth=2.2;x.lineJoin='round';x.stroke();
-  // least-squares trend
-  const n=years.length;let sx=0,sy=0;years.forEach((yr,i)=>{sx+=yr;sy+=vals[i];});
-  const mx=sx/n,my=sy/n;let sxx=0,sxy=0;years.forEach((yr,i)=>{sxx+=(yr-mx)**2;sxy+=(yr-mx)*(vals[i]-my);});
-  const m=sxy/(sxx||1),b=my-m*mx;
-  x.strokeStyle='#f472b6';x.lineWidth=2.6;x.setLineDash([9,6]);x.beginPath();
-  x.moveTo(X(0),Y(m*years[0]+b));x.lineTo(X(n-1),Y(m*years[n-1]+b));x.stroke();x.setLineDash([]);
-  // anomalies
-  const amap={};(anoms||[]).forEach(a=>{amap[a.year]=a;});
-  years.forEach((yr,i)=>{if(amap[yr]){x.beginPath();x.arc(X(i),Y(vals[i]),5,0,7);
-    x.fillStyle='#fbbf24';x.fill();x.strokeStyle='#04060e';x.lineWidth=2;x.stroke();}});
-  x.fillStyle='#5b6484';x.font='11px Inter';
-  x.fillText(years[0],46,H-8);x.fillText(years[n-1],W-44,H-8);
-  x.fillText(max.toFixed(1)+'°C',2,16);x.fillText(min.toFixed(1)+'°C',2,H-40);
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3800);}
+function setErr(m){const e=$('err');e.textContent=m||'';e.style.display=m?'block':'none';}
+const RISKCOL={CRITICAL:'#ff6b6b',HIGH:'#ffa94d',MEDIUM:'#ffd43b',LOW:'#69db7c',OK:'#69db7c'};
+/* ---- Risk Radar chart (vanilla canvas, dependency-free) ---- */
+const CHARTCOL={CRITICAL:'#ef4444',HIGH:'#f97316',MEDIUM:'#eab308',LOW:'#22c55e',OK:'#22c55e'};
+function chartColor(it){
+  if(it.risk_level&&CHARTCOL[it.risk_level])return CHARTCOL[it.risk_level];
+  const s=+it.risk_score||0; // fallback to score thresholds when level is missing
+  return s>=80?'#ef4444':s>=60?'#f97316':s>=40?'#eab308':'#22c55e';
+}
+let chartItems=[],chartBars=[],chartAnim=null;
+function drawRiskChart(items,animate=true){
+  const cv=$('riskChart'),wrap=$('chartWrap'),empty=$('chartEmpty'),tip=$('chartTip');
+  if(chartAnim){cancelAnimationFrame(chartAnim);chartAnim=null;}
+  tip.style.display='none';chartBars=[];
+  if(!items||!items.length){wrap.style.display='none';empty.style.display='block';chartItems=[];return;}
+  wrap.style.display='block';empty.style.display='none';
+  chartItems=[...items].sort((a,b)=>(+b.risk_score||0)-(+a.risk_score||0)).slice(0,10); // fewer than 10 → chart what's there
+  const W=wrap.clientWidth;if(!W)return; // guard: hidden container
+  const dpr=window.devicePixelRatio||1;
+  const padL=2,padR=2,rowH=46,padT=6,padB=8,barH=14;
+  const H=padT+chartItems.length*rowH+padB;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  chartBars=chartItems.map((it,i)=>{
+    const score=Math.max(0,Math.min(100,+it.risk_score||0));
+    return {it,y:padT+i*rowH,score,target:(W-padL-padR)*(score/100)};
+  });
+  function truncate(t,maxW){
+    if(ctx.measureText(t).width<=maxW)return t;
+    let s=t;while(s.length>1&&ctx.measureText(s+'…').width>maxW)s=s.slice(0,-1);
+    return s+'…';
+  }
+  function paint(p){
+    ctx.clearRect(0,0,W,H);
+    chartBars.forEach(b=>{
+      const col=chartColor(b.it);
+      const ty=b.y,tx=padL,tw=W-padL-padR;
+      // label row: product name left, score right
+      ctx.font='600 12px Inter,system-ui,sans-serif';ctx.textBaseline='alphabetic';
+      ctx.fillStyle='#f5f3ee';
+      const sw=ctx.measureText(b.score.toFixed(1)).width+4;
+      ctx.fillText(truncate(b.it.product_name||b.it.sku||'—',tw-sw-10),tx,ty+13);
+      ctx.font='800 12.5px "Space Grotesk",Inter,sans-serif';ctx.fillStyle=col;
+      ctx.fillText(b.score.toFixed(1),tx+tw-sw+4,ty+13);
+      // track + animated bar
+      const by=ty+20,bw=b.target*p;
+      ctx.fillStyle='rgba(255,255,255,.07)';
+      ctx.beginPath();ctx.roundRect(tx,by,tw,barH,7);ctx.fill();
+      if(bw>0.5){
+        const g=ctx.createLinearGradient(tx,0,tx+tw,0);
+        g.addColorStop(0,col);g.addColorStop(1,col+'b3');
+        ctx.fillStyle=g;
+        ctx.beginPath();ctx.roundRect(tx,by,Math.min(bw,tw),barH,7);ctx.fill();
+      }
+    });
+  }
+  if(!animate){paint(1);return;}
+  const t0=performance.now(),dur=750;
+  (function frame(t){
+    const pr=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-pr,3);
+    paint(e);if(pr<1)chartAnim=requestAnimationFrame(frame);else chartAnim=null;
+  })(t0);
+}
+function chartHover(e){
+  const cv=$('riskChart'),wrap=$('chartWrap'),tip=$('chartTip');
+  if(!chartBars.length){tip.style.display='none';return;}
+  const r=cv.getBoundingClientRect();
+  const x=e.clientX-r.left,y=e.clientY-r.top;
+  const hit=chartBars.find(b=>y>=b.y+18&&y<=b.y+36&&x>=0&&x<=r.width);
+  if(!hit){tip.style.display='none';return;}
+  const it=hit.it,dl=it.days_of_stock;
+  tip.innerHTML=`<b>${esc(it.sku)}</b> · ${esc(it.product_name)}<br>`+
+    `<span class="tk">Days of stock:</span> ${dl===null||dl===undefined?'—':dl}<br>`+
+    `<span class="tk">Suggested order:</span> ${Math.round(+it.suggested_order_qty||0)} units<br>`+
+    `<span class="tk">Risk:</span> ${esc(it.risk_level||'—')} (${(+it.risk_score||0).toFixed(1)})`;
+  tip.style.display='block';
+  const wr=wrap.getBoundingClientRect();
+  let lx=e.clientX-wr.left+14,ly=e.clientY-wr.top+14;
+  if(lx+270>wr.width)lx=e.clientX-wr.left-270;
+  tip.style.left=Math.max(4,lx)+'px';tip.style.top=Math.max(4,ly)+'px';
 }
 
-async function investigate(){
-  const place=$('place').value.trim(),lat=parseFloat($('lat').value),lon=parseFloat($('lon').value);
-  if(!place||isNaN(lat)||isNaN(lon)){toast('Enter a place name and valid coordinates.');return;}
-  const btn=$('go');btn.disabled=true;
-  $('stage').innerHTML=`<div class="loading"><div class="spinner"></div><b>Gathering satellite evidence…</b><div class="steps">querying NASA POWER · 40 years of monthly data · computing trend & anomalies</div></div>`;
+async function loadDemo(){
+  setErr('');const b=$('demoBtn');b.disabled=true;b.innerHTML='<span class="spin"></span>Analyzing…';
   try{
-    const r=await fetch('/api/investigate',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({place,lat,lon})});
-    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||('server '+r.status));}
+    const r=await fetch('/api/sample');const d=await r.json();
+    if(!r.ok)throw new Error(d.detail||'demo failed');
+    const csv=await (await fetch('/api/sample.csv')).text();
+    lastRows=parseCSV(csv);isDemo=true;render(d,true);
+  }catch(e){setErr('Demo failed: '+e.message);}
+  b.disabled=false;b.textContent='⚡ Analyze demo shop';
+}
+function parseCSV(t){
+  const [h,...lines]=t.trim().split('\n');const cols=h.split(',').map(c=>c.trim());
+  return lines.filter(l=>l.trim()).map(l=>{const v=l.split(',');const o={};cols.forEach((c,i)=>o[c]=(v[i]||'').trim());return{
+    sku:o.sku,product_name:o.product_name||o.sku,category:o.category||null,
+    on_hand:+o.on_hand||0,avg_daily_sales:+o.avg_daily_sales||0,
+    lead_time_days:+o.lead_time_days||0,unit_cost:+(o.unit_cost||0)};});
+}
+async function uploadCSV(inp){
+  setErr('');const f=inp.files[0];if(!f)return;
+  const fd=new FormData();fd.append('file',f);
+  try{
+    const r=await fetch('/api/analyze',{method:'POST',body:fd});
     const d=await r.json();
-    lastCase=d; // remember for the case-file download
-    const yrs=Object.keys(d.temperature.annual_means_c).map(Number).sort((a,b)=>a-b);
-    const vals=yrs.map(y=>d.temperature.annual_means_c[y]);
-    const t=d.temperature.trend,anoms=d.temperature.anomalies||[];
-    const per=t.slope_per_decade||0,cls=per>0.05?'up':per<-0.05?'dn':'neu';
-    const anomTxt=anoms.length?anoms.slice(0,6).map(a=>a.year).join(', ')+(anoms.length>6?` +${anoms.length-6} more`:''):'none detected';
-    $('stage').innerHTML=`<div id="results" style="display:block">
-      <div class="stats">
-        <div class="stat ${cls}" style="animation-delay:.02s"><div class="v">${per>=0?'+':''}${per.toFixed(2)}°</div><div class="l">warming per decade</div></div>
-        <div class="stat neu" style="animation-delay:.08s"><div class="v">${(t.r2??0).toFixed(2)}</div><div class="l">trend fit (R²)</div></div>
-        <div class="stat neu" style="animation-delay:.14s"><div class="v">${anoms.length}</div><div class="l">anomaly years flagged</div></div>
-        <div class="stat neu" style="animation-delay:.2s"><div class="v">${d.elevation_m??'—'}<span style="font-size:14px"> m</span></div><div class="l">elevation</div></div>
-      </div>
-      <div class="card" style="margin-top:0"><h2><span class="n">2</span>The evidence — annual mean temperature</h2>
-        <canvas id="chart"></canvas>
-        <div class="legend"><span><i style="background:#a5b4fc"></i>observed annual mean</span>
-        <span><i style="background:#f472b6"></i>fitted trend</span>
-        <span><i style="background:#fbbf24;border-radius:50%;width:10px;height:10px"></i>anomaly year</span></div>
-        <div class="meta">${esc(d.place)} · ${yrs[0]}–${yrs[yrs.length-1]} · anomalies: ${esc(anomTxt)}</div>
-      </div>
-      <div class="card"><h2 class="dl-head"><span><span class="n">3</span>Detective report</span><button class="dlbtn" id="dlbtn" onclick="downloadCase()" title="Download this investigation as a Markdown case file">⬇️ Download Case File</button></h2>
-        <div class="dossier"><pre>${esc(d.report.narrative)}</pre>
-        <div><span class="prov">narrated by ${esc(d.report.provider)}</span></div></div>
-        <div class="meta">Source: ${esc(d.data_source)} · elevation ${d.elevation_m??'—'} m · precipitation trend ${(d.precipitation.trend.slope_per_decade??0)>=0?'+':''}${(d.precipitation.trend.slope_per_decade??0).toFixed(3)} mm/day per decade</div>
-      </div></div>`;
-    drawChart(yrs,vals,anoms);
-    $('stage').scrollIntoView({behavior:'smooth'});
-  }catch(e){$('stage').innerHTML='';toast('Investigation failed: '+e.message);}
-  btn.disabled=false;
+    if(!r.ok)throw new Error(d.detail||'Upload failed');
+    lastRows=parseCSV(await f.text());isDemo=false;render(d,false);
+  }catch(e){setErr(e.message);}
+  inp.value='';
 }
-
-function sanitizeName(s){
-  const c=String(s??'case').toLowerCase().trim().replace(/[\s_]+/g,'-')
-    .replace(/[^a-z0-9-]/g,'').replace(/-+/g,'-').replace(/^-+|-+$/g,'');
-  return c||'case';
+function countUp(el,to,prefix=''){
+  const t0=performance.now(),dur=700;
+  (function f(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+    el.textContent=prefix+Math.round(to*e).toLocaleString();if(p<1)requestAnimationFrame(f);})(t0);
 }
-
-function buildCaseFile(d){
-  const t=d.temperature||{},tr=t.trend||{},anoms=Array.isArray(t.anomalies)?t.anomalies:[];
-  const means=t.annual_means_c||{};
-  const p=d.precipitation||{},ptr=p.trend||{};
-  const panoms=Array.isArray(p.anomalies)?p.anomalies:[];
-  const yrs=Object.keys(means).map(Number).filter(y=>!isNaN(y)).sort((a,b)=>a-b);
-  const vals=yrs.map(y=>means[y]);
-  const per=tr.slope_per_decade??0, r2=tr.r2??0;
-  const today=new Date().toISOString().slice(0,10);
-  const period=(tr.first_year!=null&&tr.last_year!=null)
-    ? `${tr.first_year}–${tr.last_year} (${tr.n??yrs.length} years)`
-    : (yrs.length?`${yrs[0]}–${yrs[yrs.length-1]}`:'—');
-  const L=[];
-  L.push('# 🛰️ TERRA DETECTIVE AI — CASE FILE','');
-  L.push(`**Location:** ${d.place??'—'} (${d.lat??'?'}, ${d.lon??'?'})`);
-  L.push(`**Investigation date:** ${today}`);
-  L.push(`**Period:** ${period}`,'');
-  L.push('## 🔑 KEY FINDINGS');
-  L.push(`- **Warming rate:** ${per>=0?'+':''}${Number(per).toFixed(2)}°C per decade`);
-  L.push(`- **Trend fit (R²):** ${Number(r2).toFixed(2)}`);
-  if(anoms.length){
-    L.push(`- **Anomaly years flagged:** ${anoms.length} — ${anoms.map(a=>a.year).join(', ')}`);
-    anoms.forEach(a=>{L.push(`  - ${a.year}: ${Number(a.anomaly)>=0?'+':''}${Number(a.anomaly).toFixed(2)}°C vs trend (observed ${Number(a.value).toFixed(2)}°C)`);});
-  }else L.push('- **Anomaly years flagged:** none detected');
-  L.push(`- **Elevation:** ${d.elevation_m??'—'} m`);
-  const ps=ptr.slope_per_decade??0;
-  L.push(`- **Precipitation trend:** ${ps>=0?'+':''}${Number(ps).toFixed(3)} mm/day per decade${panoms.length?` (${panoms.length} anomaly year${panoms.length>1?'s':''}: ${panoms.map(a=>a.year).join(', ')})`:''}`);
-  L.push('');
-  if(yrs.length>=5){
-    // least-squares fit — same math the on-screen chart uses
-    const n=yrs.length;let sx=0,sy=0;
-    yrs.forEach((yr,i)=>{sx+=yr;sy+=vals[i];});
-    const mx=sx/n,my=sy/n;let sxx=0,sxy=0;
-    yrs.forEach((yr,i)=>{sxx+=(yr-mx)**2;sxy+=(yr-mx)*(vals[i]-my);});
-    const m=sxx?sxy/sxx:0,b=my-m*mx;
-    const aset=new Set(anoms.map(a=>a.year));
-    L.push('## 📊 EVIDENCE — OBSERVED vs TREND (°C, annual mean)');
-    L.push('| Year | Observed | Trend fit | Anomaly |');
-    L.push('|------|----------|-----------|---------|');
-    yrs.forEach((yr,i)=>{L.push(`| ${yr} | ${Number(vals[i]).toFixed(2)} | ${(m*yr+b).toFixed(2)} | ${aset.has(yr)?'⚠️':''} |`);});
-    L.push('');
-  }
-  if(d.report&&d.report.narrative){
-    L.push('## 🕵️ DETECTIVE REPORT','');
-    L.push(String(d.report.narrative).trim(),'');
-  }
-  L.push('## 🧪 METHOD NOTE');
-  L.push(`- **Data source:** ${d.data_source??'—'}`);
-  L.push(`- **Narrative provider:** ${d.report&&d.report.provider?d.report.provider:'—'}`);
-  L.push('- **Trend:** least-squares linear fit on annual mean temperatures');
-  L.push(`- **Anomalies:** years whose trend-removed residual exceeds 2σ (${anoms.length} flagged)`);
-  L.push('');
-  L.push('---');
-  L.push('*Generated by TerraDetective AI — demo case file*');
-  return L.join('\n');
+function render(d,demo){
+  $('results').style.display='block';
+  countUp($('kItems'),d.item_count);countUp($('kCrit'),d.critical_count);countUp($('kHigh'),d.high_count);
+  $('kVal').textContent='$'+Math.round(d.total_value_at_risk).toLocaleString();
+  $('dataBadge').textContent=demo?'demo data · synthetic':'your data';
+  $('tbl').innerHTML=d.items.map(i=>{
+    const dl=i.days_of_stock,w=dl===null?0:Math.min(100,dl/30*100);
+    return `<tr><td><code class="sku">${esc(i.sku)}</code></td><td>${esc(i.product_name)}</td><td>${esc(i.on_hand)}</td>
+    <td>${dl===null?'—':dl}<div class="daysbar"><div style="width:${w}%;background:${RISKCOL[i.risk_level]||'#999'}"></div></div></td>
+    <td><span class="pill ${i.risk_level}">${i.risk_level}</span></td>
+    <td><b>${Math.round(i.suggested_order_qty)}</b></td><td class="why">${esc(i.reason)}</td></tr>`;}).join('');
+  drawRiskChart(d.items);
+  $('narrCard').style.display='none';$('answer').style.display='none';
+  $('results').scrollIntoView({behavior:'smooth'});
 }
-
-function downloadCase(){
-  if(!lastCase){toast('Run an investigation first.');return;}
-  const md=buildCaseFile(lastCase);
-  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`terradetective-case-${sanitizeName(lastCase.place)}.md`;
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),2000);
+async function narrate(){
+  if(!lastRows)return;const b=$('narrBtn');b.disabled=true;
+  $('narrative').innerHTML='<span class="spin lt"></span> Generating briefing…';$('narrCard').style.display='block';
+  try{
+    const r=await fetch('/api/narrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lastRows)});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'narrate failed');
+    $('narrProv').textContent=d.provider==='infinisynapse'?'InfiniSynapse AI':d.provider==='pollinations'?'AI':'offline heuristic';
+    $('narrative').textContent=d.narrative;
+  }catch(e){$('narrative').textContent='Briefing failed: '+e.message;}
+  b.disabled=false;
 }
+async function ask(){
+  const q=$('q').value.trim();if(!q||!lastRows)return;
+  const box=$('answer');box.style.display='block';box.innerHTML='<span class="spin lt"></span> Thinking…';
+  $('askBtn').disabled=true;
+  try{
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:q,rows:lastRows})});
+    const d=await r.json();if(!r.ok)throw new Error(d.detail||'ask failed');
+    box.innerHTML='<b>Answer</b> <span class="provtag">'+esc(d.provider||'heuristic-qa')+'</span><br><br>'+esc(d.answer).replace(/\n/g,'<br>')+
+      (d.citations&&d.citations.length?'<div class="cites">Referenced: '+d.citations.map(c=>`<code>${esc(c)}</code>`).join('')+'</div>':'');
+  }catch(e){box.textContent='Failed: '+e.message;}
+  $('askBtn').disabled=false;
+}
+fetch('/api/status').then(r=>r.json()).then(s=>{
+  const p=s.ai_provider||'';
+  $('aiBadge').textContent=p==='infinisynapse'?'InfiniSynapse AI connected':p?('AI: '+p):'engine ready';
+}).catch(()=>{});
+/* risk chart interactions */
+$('riskChart').addEventListener('mousemove',chartHover);
+$('riskChart').addEventListener('mouseleave',()=>{$('chartTip').style.display='none';});
+let rzT=null;
+window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(chartItems.length)drawRiskChart(chartItems,false);},200);});
 </script>
 </body>
 </html>
