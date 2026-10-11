@@ -3,3 +3,4 @@ uvicorn>=0.29
 pandas>=2.0
 python-multipart>=0.0.9
 pydantic>=2.0
+mangum>=0.19
