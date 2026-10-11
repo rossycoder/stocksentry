@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockSentry — AI Replenishment Desk</title>
+<style>
+  :root { --bg:#0f1420; --card:#1a2233; --line:#2a3650; --txt:#e8edf5; --dim:#93a0b8;
+          --crit:#ff5d5d; --high:#ff9f43; --med:#ffd32a; --low:#7bed9f; --ok:#7bed9f; --acc:#5aa2ff; }
+  * { box-sizing:border-box; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  body { background:var(--bg); color:var(--txt); margin:0; padding:24px; }
+  .wrap { max-width:1100px; margin:0 auto; }
+  h1 { font-size:28px; margin:0 0 4px; } h1 span{color:var(--acc);}
+  .sub { color:var(--dim); margin-bottom:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  button { background:var(--acc); color:#fff; border:0; border-radius:8px; padding:10px 18px;
+           font-size:15px; cursor:pointer; font-weight:600; }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--txt); }
+  button:disabled { opacity:.5; cursor:wait; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .kpi .v { font-size:26px; font-weight:700; } .kpi .l { color:var(--dim); font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--dim); font-weight:600; }
+  .pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+  .CRITICAL{background:#3d1414;color:var(--crit);} .HIGH{background:#3a2410;color:var(--high);}
+  .MEDIUM{background:#3a3210;color:var(--med);} .LOW{background:#12331d;color:var(--low);}
+  .OK{background:#12331d;color:var(--ok);}
+  .badge { font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; background:#2a3a5f; color:var(--acc); }
+  #narrative { white-space:pre-wrap; line-height:1.6; }
+  .qa { display:flex; gap:8px; margin-top:10px; }
+  .qa input { flex:1; background:var(--bg); border:1px solid var(--line); color:var(--txt);
+              border-radius:8px; padding:10px 12px; font-size:14px; }
+  #answer { margin-top:10px; padding:12px; background:var(--bg); border-radius:8px; line-height:1.55; display:none; }
+  .hint { color:var(--dim); font-size:13px; margin-top:8px; }
+  .err { color:var(--crit); margin-top:8px; }
+  details { margin-top:10px; } summary { cursor:pointer; color:var(--dim); }
+  code { background:var(--bg); padding:2px 6px; border-radius:4px; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📦 Stock<span>Sentry</span></h1>
+  <div class="sub">AI replenishment desk for small retail shops · InfiniSynapse Vibe Coding Hackathon 2026 · Track: Retail &amp; Replenishment</div>
+
+  <div class="card">
+    <div class="row">
+      <button id="demoBtn" onclick="loadDemo()">⚡ Try demo data</button>
+      <button class="ghost" onclick="document.getElementById('csvFile').click()">📤 Upload your CSV</button>
+      <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="uploadCSV(this)">
+      <a href="/api/sample.csv" style="color:var(--dim);font-size:13px;">download demo CSV</a>
+    </div>
+    <div class="hint">CSV columns: <code>sku, product_name, on_hand, avg_daily_sales, lead_time_days</code> (+ optional <code>category, unit_cost</code>)</div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="results" style="display:none">
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="kItems">–</div><div class="l">SKUs analyzed</div></div>
+      <div class="kpi"><div class="v" id="kCrit" style="color:var(--crit)">–</div><div class="l">Critical</div></div>
+      <div class="kpi"><div class="v" id="kHigh" style="color:var(--high)">–</div><div class="l">High risk</div></div>
+      <div class="kpi"><div class="v" id="kVal">–</div><div class="l">Inventory value at risk</div></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="margin:0">🎯 Reorder priority <span class="badge" id="dataBadge"></span></h3>
+        <button class="ghost" onclick="narrate()">✨ AI briefing</button>
+      </div>
+      <table><thead><tr>
+        <th>SKU</th><th>Product</th><th>On hand</th><th>Days left</th>
+        <th>Risk</th><th>Suggested order</th><th>Why</th>
+      </tr></thead><tbody id="tbl"></tbody></table>
+    </div>
+
+    <div class="card" id="narrCard" style="display:none">
+      <h3 style="margin-top:0">🧠 AI briefing <span class="badge" id="narrProv"></span></h3>
+      <div id="narrative"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">💬 Ask about your stock</h3>
+      <div class="qa">
+        <input id="q" placeholder='e.g. "Which SKUs are critical?" or "tell me about SKU SNK-201"' onkeydown="if(event.key==='Enter')ask()">
+        <button onclick="ask()">Ask</button>
+      </div>
+      <div id="answer"></div>
+      <div class="hint">Try: "what should I reorder first?" · "total inventory value?" · "which SKUs are healthy?"</div>
+    </div>
+
+    <details><summary>How the risk score is computed</summary>
+      <p style="color:var(--dim);font-size:14px;line-height:1.6">
+      days_of_stock = on_hand ÷ avg_daily_sales ·
+      reorder_point = daily_sales × lead_time × 1.25 ·
+      risk from coverage ÷ lead time: &lt;0.5× → CRITICAL, &lt;1× → HIGH, &lt;2× → MEDIUM, &lt;4× → LOW, else OK.
+      Suggested order tops stock up to 30 days of cover. Zero-velocity items are flagged honestly, never scored.</p>
+    </details>
+  </div>
+</div>
+
+<script>
+let lastRows = null, isDemo = false;
+const $ = id => document.getElementById(id);
+
+async function loadDemo(){
+  setErr(''); const b=$('demoBtn'); b.disabled=true; b.textContent='Analyzing…';
+  try{
+    const r = await fetch('/api/sample'); const d = await r.json();
+    lastRows = null; isDemo = true;
+    // re-fetch rows for narrate/ask via sample csv parse on server side is complex;
+    // instead ask server for rows through analyze-rows using returned items is lossy.
+    // Simplest: keep demo rows client-side by fetching the CSV and parsing minimally.
+    const csv = await (await fetch('/api/sample.csv')).text();
+    lastRows = parseCSV(csv);
+    render(d, true);
+  }catch(e){ setErr('Demo failed: '+e.message); }
+  b.disabled=false; b.textContent='⚡ Try demo data';
+}
+function parseCSV(t){
+  const [h,...lines]=t.trim().split('\n'); const cols=h.split(',');
+  return lines.filter(l=>l.trim()).map(l=>{const v=l.split(',');const o={};cols.forEach((c,i)=>o[c]=v[i]);return{
+    sku:o.sku, product_name:o.product_name, category:o.category||null,
+    on_hand:+o.on_hand, avg_daily_sales:+o.avg_daily_sales,
+    lead_time_days:+o.lead_time_days, unit_cost:+(o.unit_cost||0)};});
+}
+async function uploadCSV(inp){
+  setErr(''); const f=inp.files[0]; if(!f) return;
+  const fd=new FormData(); fd.append('file',f);
+  try{
+    const r=await fetch('/api/analyze',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||'Upload failed');
+    lastRows=parseCSV(await f.text()); isDemo=false; render(d,false);
+  }catch(e){ setErr(e.message); }
+  inp.value='';
+}
+function render(d, demo){
+  $('results').style.display='block';
+  $('kItems').textContent=d.item_count;
+  $('kCrit').textContent=d.critical_count;
+  $('kHigh').textContent=d.high_count;
+  $('kVal').textContent='$'+d.total_value_at_risk.toLocaleString();
+  $('dataBadge').textContent = demo ? 'DEMO DATA (synthetic)' : 'YOUR DATA';
+  $('tbl').innerHTML = d.items.map(i=>`<tr>
+    <td><code>${i.sku}</code></td><td>${i.product_name}</td><td>${i.on_hand}</td>
+    <td>${i.days_of_stock===null?'—':i.days_of_stock}</td>
+    <td><span class="pill ${i.risk_level}">${i.risk_level}</span></td>
+    <td>${i.suggested_order_qty.toFixed(0)}</td><td style="max-width:340px">${i.reason}</td></tr>`).join('');
+  $('narrCard').style.display='none'; $('answer').style.display='none';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+async function narrate(){
+  if(!lastRows) return;
+  $('narrative').textContent='Generating briefing…'; $('narrCard').style.display='block';
+  const r=await fetch('/api/narrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lastRows)});
+  const d=await r.json();
+  $('narrProv').textContent = d.provider==='infinisynapse' ? 'InfiniSynapse AI' : 'offline heuristic';
+  $('narrative').textContent=d.narrative;
+}
+async function ask(){
+  const q=$('q').value.trim(); if(!q||!lastRows) return;
+  const box=$('answer'); box.style.display='block'; box.textContent='Thinking…';
+  const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({question:q, rows:lastRows})});
+  const d=await r.json();
+  box.innerHTML = '<b>Answer</b> <span class="badge">heuristic-qa</span><br>'+escapeHtml(d.answer) +
+    (d.citations.length?'<br><span class="hint">Referenced: '+d.citations.join(', ')+'</span>':'');
+}
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function setErr(m){$('err').textContent=m;}
+fetch('/api/status').then(r=>r.json()).then(s=>{
+  if(s.ai_provider==='infinisynapse') document.querySelector('.sub').innerHTML+=' · <span class="badge">InfiniSynapse AI connected</span>';
+});
+</script>
+</body>
+</html>
