@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 from typing import List
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -148,8 +149,15 @@ def ask(q: QuestionRequest):
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    with open("static/index.html", encoding="utf-8") as f:
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(here, "static", "index.html"), encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+app.mount("/static", StaticFiles(directory=os.path.join(_BASE_DIR, "static")), name="static")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8127")))
