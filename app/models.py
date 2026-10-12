@@ -1,7 +1,7 @@
 """Pydantic models for StockSentry API."""
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -49,6 +49,82 @@ class QuestionRequest(BaseModel):
 
 
 class QuestionResponse(BaseModel):
-    provider: str  # "heuristic-qa" or "infinisynapse"
+    provider: str  # "pollinations" | "groq:..." | "gemini:..." | "heuristic-qa"
     answer: str
     citations: List[str]  # SKUs referenced
+
+
+# ---------------------------------------------------------------------------
+# Next-level tools (built from real small-business complaints)
+# ---------------------------------------------------------------------------
+
+class RowsRequest(BaseModel):
+    rows: List[InventoryRow]
+
+
+class DeadStockItem(BaseModel):
+    sku: str
+    product_name: str
+    on_hand: float
+    avg_daily_sales: float
+    unit_cost: float
+    cash_locked: float
+    discount_30d: float  # suggested % off to clear stock in 30 days
+    discount_60d: float
+    discount_90d: float
+
+
+class DeadStockResponse(BaseModel):
+    provider: str  # "stocksentry-engine"
+    item_count: int
+    total_cash_locked: float
+    items: List[DeadStockItem]
+    note: str
+
+
+class SpikeRequest(BaseModel):
+    rows: List[InventoryRow]
+    multiplier: float = Field(default=10.0, gt=1, le=100)
+
+
+class SpikeItem(BaseModel):
+    sku: str
+    product_name: str
+    normal_days: Optional[float]
+    spike_days: Optional[float]
+    emergency_order_qty: float
+    stockout_in_7d: bool
+
+
+class SpikeResponse(BaseModel):
+    provider: str  # "stocksentry-engine"
+    multiplier: float
+    stockout_7d_count: int
+    items: List[SpikeItem]
+
+
+class RestockRequest(BaseModel):
+    rows: List[InventoryRow]
+    cost_multiplier: float = Field(default=1.25, gt=1, le=10,
+                                   description="Supplier price increase, e.g. 1.25 = +25%")
+    new_costs: Optional[Dict[str, float]] = Field(
+        default=None, description="Optional per-SKU override of the new unit cost")
+
+
+class RestockItem(BaseModel):
+    sku: str
+    product_name: str
+    on_hand: float
+    old_cost: float
+    new_cost: float
+    rebuy_qty: float  # how many units the old-cost capital can rebuy at new cost
+    shortfall_units: float
+    extra_capital_needed: float
+
+
+class RestockResponse(BaseModel):
+    provider: str  # "stocksentry-engine"
+    cost_multiplier: float
+    total_shortfall_units: float
+    total_extra_capital: float
+    items: List[RestockItem]

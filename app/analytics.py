@@ -130,3 +130,132 @@ def summarize(items: List[RiskItem]) -> tuple[str, float]:
     else:
         parts.append("No urgent reorders — stock cover is healthy.")
     return " ".join(parts), total_var
+
+
+# ---------------------------------------------------------------------------
+# Next-level tools — built from real small-business complaints on social media
+# ---------------------------------------------------------------------------
+
+# Dead-stock velocity threshold: below this daily sales rate an SKU is
+# considered "not moving" (cash trapped on the shelf).
+DEAD_VELOCITY_THRESHOLD = 0.5
+# Discount elasticity assumption: each 1% of discount lifts daily velocity
+# by ~3% (k=3). Labeled as an estimate everywhere it is used.
+DISCOUNT_ELASTICITY = 3.0
+MAX_SUGGESTED_DISCOUNT = 0.70
+
+
+def _discount_to_clear(on_hand: float, velocity: float, days: int) -> float:
+    """Discount fraction (0-0.7) estimated to clear on_hand units in `days`.
+
+    required_velocity = on_hand / days. With elasticity k, a discount d
+    lifts velocity to velocity * (1 + k*d). Solve for d, clamp to [0, 0.7].
+    Zero-velocity items get a 30% starting suggestion (labeled estimate).
+    """
+    if on_hand <= 0:
+        return 0.0
+    required = on_hand / max(days, 1)
+    if velocity <= 0:
+        return 0.30  # no velocity data: honest starting suggestion
+    if required <= velocity:
+        return 0.0  # already clears in time without discount
+    d = (required / velocity - 1.0) / DISCOUNT_ELASTICITY
+    return round(min(max(d, 0.0), MAX_SUGGESTED_DISCOUNT), 2)
+
+
+def dead_stock(rows: List[InventoryRow]) -> tuple[list, float]:
+    """Flag ~zero-velocity SKUs, cash locked, and clearance discounts.
+
+    Returns (items, total_cash_locked). Items are dicts ready for the
+    DeadStockItem model. Sorted by cash locked, descending.
+    """
+    out = []
+    for r in rows:
+        if r.avg_daily_sales >= DEAD_VELOCITY_THRESHOLD:
+            continue
+        if r.on_hand <= 0:
+            continue
+        cash = round(r.on_hand * r.unit_cost, 2)
+        out.append({
+            "sku": r.sku,
+            "product_name": r.product_name,
+            "on_hand": r.on_hand,
+            "avg_daily_sales": r.avg_daily_sales,
+            "unit_cost": r.unit_cost,
+            "cash_locked": cash,
+            "discount_30d": _discount_to_clear(r.on_hand, r.avg_daily_sales, 30),
+            "discount_60d": _discount_to_clear(r.on_hand, r.avg_daily_sales, 60),
+            "discount_90d": _discount_to_clear(r.on_hand, r.avg_daily_sales, 90),
+        })
+    out.sort(key=lambda x: -x["cash_locked"])
+    total = round(sum(x["cash_locked"] for x in out), 2)
+    return out, total
+
+
+def spike_simulate(rows: List[InventoryRow], multiplier: float) -> tuple[list, int]:
+    """What if demand spikes `multiplier`x tomorrow?
+
+    Returns (items, stockout_7d_count). Items are dicts ready for SpikeItem,
+    sorted by spike days-of-stock ascending (most urgent first).
+    """
+    out = []
+    for r in rows:
+        spike_daily = r.avg_daily_sales * multiplier
+        if spike_daily > 0:
+            spike_days = round(r.on_hand / spike_daily, 1)
+        else:
+            spike_days = None  # no velocity: cannot project
+        if r.avg_daily_sales > 0:
+            normal_days = round(r.on_hand / r.avg_daily_sales, 1)
+        else:
+            normal_days = None
+        # Emergency order: top up to 30 days of SPIKED cover
+        target = spike_daily * TARGET_COVERAGE_DAYS
+        emergency = max(0.0, math.ceil(target - r.on_hand)) if spike_daily > 0 else 0.0
+        out.append({
+            "sku": r.sku,
+            "product_name": r.product_name,
+            "normal_days": normal_days,
+            "spike_days": spike_days,
+            "emergency_order_qty": emergency,
+            "stockout_in_7d": spike_days is not None and spike_days < 7,
+        })
+    out.sort(key=lambda x: (x["spike_days"] is None, x["spike_days"] or 0))
+    count_7d = sum(1 for x in out if x["stockout_in_7d"])
+    return out, count_7d
+
+
+def true_restock(rows: List[InventoryRow], cost_multiplier: float,
+                 new_costs: dict | None = None) -> tuple[list, float, float]:
+    """Supplier raised prices: how many units can old-cost capital rebuy?
+
+    For each SKU: rebuy_qty = (on_hand * old_cost) / new_cost.
+    Returns (items, total_shortfall_units, total_extra_capital).
+    Items sorted by shortfall descending.
+    """
+    new_costs = new_costs or {}
+    out = []
+    for r in rows:
+        if r.unit_cost <= 0 or r.on_hand <= 0:
+            continue
+        new_cost = float(new_costs.get(r.sku, r.unit_cost * cost_multiplier))
+        if new_cost <= 0:
+            continue
+        capital = r.on_hand * r.unit_cost
+        rebuy = capital / new_cost
+        shortfall = max(0.0, r.on_hand - rebuy)
+        extra = round(r.on_hand * (new_cost - r.unit_cost), 2)
+        out.append({
+            "sku": r.sku,
+            "product_name": r.product_name,
+            "on_hand": r.on_hand,
+            "old_cost": round(r.unit_cost, 2),
+            "new_cost": round(new_cost, 2),
+            "rebuy_qty": round(rebuy, 1),
+            "shortfall_units": round(shortfall, 1),
+            "extra_capital_needed": max(0.0, extra),
+        })
+    out.sort(key=lambda x: -x["shortfall_units"])
+    total_short = round(sum(x["shortfall_units"] for x in out), 1)
+    total_extra = round(sum(x["extra_capital_needed"] for x in out), 2)
+    return out, total_short, total_extra

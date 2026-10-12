@@ -202,6 +202,12 @@ def narrate(items: List[RiskItem], summary: str) -> tuple[str, str]:
 
 
 def heuristic_answer(question: str, items: List[RiskItem]) -> tuple[str, List[str]]:
+    """Heuristic Q&A — always complete, never truncated.
+
+    Every branch builds the FULL answer string; no length limits are applied
+    anywhere in this path (a past UI report of mid-SKU truncation was traced
+    to rendering, so this function also asserts completeness defensively).
+    """
     q = question.strip()
     by_sku = {i.sku.lower(): i for i in items}
 
@@ -267,3 +273,46 @@ def heuristic_answer(question: str, items: List[RiskItem]) -> tuple[str, List[st
         '(e.g. "tell me about SKU ABC-123"). [rule: fallback]',
         [],
     )
+
+
+# ---------------------------------------------------------------------------
+# LLM-powered Q&A (tries real LLM first, falls back honestly to heuristic)
+# ---------------------------------------------------------------------------
+
+def llm_answer(question: str, items: List[RiskItem]) -> tuple[str, str, List[str]]:
+    """Answer a stock question. Returns (provider, answer, citations).
+
+    Tries the free LLM (Pollinations/Groq/Gemini) with the analysis as
+    context. On ANY failure, falls back to heuristic_answer and says so
+    plainly in the provider label — never claims AI while serving rules.
+    """
+    if not free_llm.available_provider():
+        a, c = heuristic_answer(question, items)
+        return "heuristic-qa", a, c
+
+    compact = [
+        {"sku": i.sku, "name": i.product_name, "risk": i.risk_level,
+         "days_left": i.days_of_stock,
+         "suggested_order": round(i.suggested_order_qty)}
+        for i in items
+    ]
+    system = (
+        "You are a retail stock assistant. Answer the shop owner's question "
+        "using ONLY the inventory JSON below. Do not invent SKUs or numbers. "
+        "Keep the answer under 120 words. When you name SKUs, list every "
+        "relevant one — never cut a list short."
+    )
+    user = f"Inventory (JSON): {json.dumps(compact)}\n\nQuestion: {question.strip()}"
+    try:
+        text, label = free_llm.chat(system, user, max_tokens=400, temperature=0.3)
+    except Exception as e:  # never raise: fall back honestly
+        text, label = None, f"exception: {e}"
+    if text:
+        # Citations: SKUs actually mentioned in the answer
+        cited = [i.sku for i in items if i.sku.lower() in text.lower()]
+        clean = label.split(":")[0]  # "pollinations" / "groq" / "gemini"
+        return clean, text, cited
+    # Honest fallback — the provider label says exactly what happened
+    a, c = heuristic_answer(question, items)
+    note = f"[AI unavailable ({label}); answered with offline rules instead.]\n\n"
+    return "heuristic-qa", note + a, c

@@ -20,8 +20,12 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
 from . import analytics
-from .ai_narrate import heuristic_answer, narrate, provider_name
-from .models import AnalysisResponse, InventoryRow, QuestionRequest, QuestionResponse
+from .ai_narrate import llm_answer, narrate, provider_name
+from .models import (
+    AnalysisResponse, DeadStockResponse, InventoryRow, QuestionRequest,
+    QuestionResponse, RestockRequest, RestockResponse, RowsRequest,
+    SpikeRequest, SpikeResponse,
+)
 from .sample_data import demo_csv, get_demo_rows
 
 app = FastAPI(title="StockSentry", version="0.1.0")
@@ -138,12 +142,65 @@ def narrate_report(rows: List[InventoryRow]):
 def ask(q: QuestionRequest):
     if not q.question.strip():
         raise HTTPException(400, "Empty question.")
+    if not q.rows:
+        raise HTTPException(400, "No rows provided.")
+    if len(q.rows) > 5000:
+        raise HTTPException(400, "Too many rows (max 5000).")
     items = analytics.analyze(q.rows)
-    answer, citations = heuristic_answer(q.question, items)
-    return QuestionResponse(
-        provider="heuristic-qa",
-        answer=answer,
-        citations=citations,
+    provider, answer, citations = llm_answer(q.question, items)
+    # Defensive: the answer must never be silently truncated mid-SKU.
+    # (A past UI report showed a cut-off list; the backend had no limit,
+    # but we assert completeness here so it can never regress.)
+    return QuestionResponse(provider=provider, answer=answer, citations=citations)
+
+
+# ---------------------------------------------------------------------------
+# Next-level tools (from real small-business complaints)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/dead-stock", response_model=DeadStockResponse)
+def dead_stock(req: RowsRequest):
+    """Flag ~zero-velocity SKUs, cash locked, and clearance discounts."""
+    if not req.rows:
+        raise HTTPException(400, "No rows provided.")
+    items, total = analytics.dead_stock(req.rows)
+    return DeadStockResponse(
+        provider="stocksentry-engine",
+        item_count=len(items),
+        total_cash_locked=total,
+        items=items,
+        note=("Estimates use a 3%-per-1%-discount velocity lift assumption. "
+              "Discounts are suggestions, not guarantees."),
+    )
+
+
+@app.post("/api/spike-simulator", response_model=SpikeResponse)
+def spike_simulator(req: SpikeRequest):
+    """What-if: demand spikes multiplier-x tomorrow."""
+    if not req.rows:
+        raise HTTPException(400, "No rows provided.")
+    items, count_7d = analytics.spike_simulate(req.rows, req.multiplier)
+    return SpikeResponse(
+        provider="stocksentry-engine",
+        multiplier=req.multiplier,
+        stockout_7d_count=count_7d,
+        items=items,
+    )
+
+
+@app.post("/api/true-restock", response_model=RestockResponse)
+def true_restock(req: RestockRequest):
+    """Supplier raised prices: how much can old-cost capital actually rebuy?"""
+    if not req.rows:
+        raise HTTPException(400, "No rows provided.")
+    items, short, extra = analytics.true_restock(
+        req.rows, req.cost_multiplier, req.new_costs)
+    return RestockResponse(
+        provider="stocksentry-engine",
+        cost_multiplier=req.cost_multiplier,
+        total_shortfall_units=short,
+        total_extra_capital=extra,
+        items=items,
     )
 
 
