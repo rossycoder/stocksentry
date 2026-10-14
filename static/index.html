@@ -263,19 +263,29 @@ function md(src){
   let html='',inUL=false,inOL=false;
   const inline=t=>t
     .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*\*/g,'') /* unmatched ** stripped — never shows as literal asterisks */
     .replace(/(^|\W)\*([^*\n]+)\*/g,'$1<em>$2</em>')
     .replace(/`([^`]+)`/g,'<code class="sku">$1</code>');
   const close=()=>{if(inUL){html+='</ul>';inUL=false;}if(inOL){html+='</ol>';inOL=false;}};
-  for(const raw of lines){
-    const l=raw.trim();
+  const isUL=l=>/^[-*]\s+/.test(l), isOL=l=>/^\d+[.)]\s+/.test(l);
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i].trim();
     if(/^#{1,4}\s/.test(l)){close();const lvl=l.match(/^#+/)[0].length;
       html+=`<div style="font-family:'Space Grotesk';font-weight:700;font-size:${19-lvl}px;margin:10px 0 6px">${inline(l.replace(/^#+\s*/,''))}</div>`;continue;}
-    const ul=l.match(/^[-*]\s+(.*)/),ol=l.match(/^\d+[.)]\s+(.*)/);
+    const ul=l.match(/^[-*]\s+(.*)/),olm=l.match(/^(\d+)[.)]\s+(.*)/);
     if(ul){if(!inUL){close();html+='<ul style="margin:6px 0;padding-left:20px">';inUL=true;}
       html+=`<li style="margin:4px 0">${inline(ul[1])}</li>`;continue;}
-    if(ol){if(!inOL){close();html+='<ol style="margin:6px 0;padding-left:20px">';inOL=true;}
-      html+=`<li style="margin:4px 0">${inline(ol[1])}</li>`;continue;}
-    if(!l){close();continue;}
+    if(olm){if(!inOL){close();const st=+olm[1]!==1?` start="${+olm[1]}"`:'';
+      html+=`<ol style="margin:6px 0;padding-left:20px"${st}>`;inOL=true;}
+      html+=`<li style="margin:4px 0">${inline(olm[2])}</li>`;continue;}
+    if(!l){
+      /* blank line: keep the list open if the next non-blank line is a same-type
+         list item, so numbering stays continuous; close only on real boundaries */
+      let j=i+1,nl='';
+      while(j<lines.length){nl=lines[j].trim();if(nl)break;j++;}
+      if(!((inOL&&isOL(nl))||(inUL&&isUL(nl))))close();
+      continue;
+    }
     close();html+=`<p style="margin:6px 0">${inline(l)}</p>`;
   }
   close();return html;
